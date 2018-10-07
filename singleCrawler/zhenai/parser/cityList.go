@@ -6,22 +6,25 @@ import (
 	"regexp"
 )
 
-const cityList  = `<a href="(http://www.zhenai.com/zhenghun/[0-9a-z]+)"[^>]*>([^<]+)</a>`
+var CityListRe = regexp.MustCompile(`<a href="(http://www.zhenai.com/zhenghun/[0-9a-z]+)"[^>]*>([^<]+)</a>`)
 func ParserCityList(contents []byte) engine.ParserResult  {
 
-	re := regexp.MustCompile(cityList)
-	matches := re.FindAllSubmatch(contents, -1)
+	matches := CityListRe.FindAllSubmatch(contents, -1)
 
 	result := engine.ParserResult{}
-
+	limit := 20
 	for _,m := range matches {
 
-		result.Items = append(result.Items, string(m[2]))
+		fmt.Println("fetching url", string(m[1]))
+		result.Items = append(result.Items, "City " + string(m[2]))
 		result.Requests = append(result.Requests, engine.Request{
 			string(m[1]),
-			engine.NilParser,
+			ParseCityUserList,
 		})
-		fmt.Printf("City:%s,URL:%s\n", m[2], m[1])
+		limit --
+		if limit ==0 {
+			break
+		}
 	}
 	return result
 }
