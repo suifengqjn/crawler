@@ -3,16 +3,18 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"goDemo/Project/crawler/singleCrawler/config"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/transform"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 )
 
 func main() {
-	res, err := http.Get("http://www.zhenai.com/zhenghun")
+	res, err := http.Get(config.CRAWLER_URL)
 	if err != err {
 		panic(err)
 	}
@@ -29,7 +31,8 @@ func main() {
 	utf8Reader := transform.NewReader(res.Body, e.NewDecoder())
 
 	data, err := ioutil.ReadAll(utf8Reader)
-	fmt.Println(string(data))
+	//fmt.Println(string(data))
+	printCityList(data)
 }
 
 func determinEncodeing (r io.Reader) encoding.Encoding  {
@@ -39,4 +42,16 @@ func determinEncodeing (r io.Reader) encoding.Encoding  {
 	}
 	e,_, _ := charset.DetermineEncoding(bytes,"")
 	return e
+}
+
+func printCityList(contents []byte)  {
+	re := regexp.MustCompile(`<a href="(http://www.zhenai.com/zhenghun/[0-9a-z]+)"[^>]*>([^<]+)</a>`)
+	matches := re.FindAllSubmatch(contents, -1)
+
+	for _,m := range matches {
+		
+		fmt.Printf("City:%s,URL:%s\n", m[2], m[1])
+	}
+	fmt.Println(len(matches))
+
 }
